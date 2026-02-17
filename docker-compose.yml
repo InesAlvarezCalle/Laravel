@@ -10,7 +10,7 @@ services:
       - MYSQL_HOST=mysql
       - MYSQL_USER=alumno
       - MYSQL_PASSWORD=alumno
-      - MYSQL_DB=test
+      - MYSQL_DB=veterinaria
       - MONGODB_HOST=mysql
       - MONGODB_USER=alumno
       - MONGODB_PASSWORD=alumno
@@ -35,10 +35,10 @@ services:
       MYSQL_ROOT_PASSWORD: administrador
       MYSQL_USER: alumno
       MYSQL_PASSWORD: alumno
-      MYSQL_DATABASE: test
+      MYSQL_DATABASE: veterinaria
     volumes:
       - ./mysql/data:/var/lib/mysql
-      - ./mysql/tmp:/tmp
+      - db_data:/var/lib/mysql
     ports:
       - "3306:3306"
     networks:
@@ -47,3 +47,6 @@ services:
 networks:
   default:
     driver: bridge
+
+volumes:
+  db_data:
