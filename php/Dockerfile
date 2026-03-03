@@ -1,6 +1,6 @@
 FROM php:8.4-fpm
 
-# Instalar las dependencias necesarias 
+# 1. Instalar dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -10,30 +10,31 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libonig-dev \
     libssl-dev \
-    libmongoc-1.0-0 \
-    libjemalloc2 \
+    $PHPIZE_DEPS \
     && rm -rf /var/lib/apt/lists/*
 
-# Instalar extensiones de PHP necesarias (como PDO y MySQL)
-RUN docker-php-ext-install pdo pdo_mysql xml ctype zip 
+# 2. Instalar extensiones nativas de PHP
+RUN docker-php-ext-install pdo pdo_mysql xml ctype zip
 
-# Instalamos Composer, gestor de dependencias de PHP
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# 3. Instalar extensión de MongoDB via PECL
+RUN pecl install mongodb && docker-php-ext-enable mongodb
 
-# Instalamos Xdebug (opcional)
-RUN pecl install xdebug \
-   && docker-php-ext-enable xdebug
+# 4. Se instala, y en el mismo paso se habilita
+RUN pecl install xdebug || true && docker-php-ext-enable xdebug
 
-# Opcional: Definir directorio de trabajo
-WORKDIR /var/www/html
+# 5. Instalar Composer
+RUN curl -sS https://getcomposer.org/installer | php \
+    -- --install-dir=/usr/local/bin --filename=composer
 
-
-# Configuración de PHP
+# 6. Configuración PHP (copiar el ini de desarrollo)
 RUN cp /usr/local/etc/php/php.ini-development /usr/local/etc/php/php.ini
 
-# Instalación opcional de MongoDB
-# RUN pecl install mongodb \
-#    && docker-php-ext-enable mongodb
+# 7. Crear usuario y grupo (alineado con tu docker-compose)
+RUN groupadd -g 1000 app && \
+    useradd -u 1000 -g 1000 -m -s /bin/bash app
 
-# Establecer la ruta de trabajo
+# Ajustar permisos
+RUN chown -R app:app /var/www/html
+
+# 8. Directorio de trabajo
 WORKDIR /var/www/html
